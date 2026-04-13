@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyMute — System-wide mic mute for macOS</title>
+    <meta name="description" content="One shortcut to mute your mic across every app. ~700 KB binary, ~15 MB idle RAM. Pure CoreAudio, no Electron.">
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --border: #222;
+            --text: #e5e5e5;
+            --text-dim: #888;
+            --accent: #7B61FF;
+            --red: #e04040;
+            --green: #2ea44f;
+            --blue: #58a6ff;
+            --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', Menlo, monospace;
+            --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero */
+        .hero {
+            padding: 80px 0 60px;
+            text-align: center;
+        }
+
+        .hero-icon {
+            font-size: 48px;
+            margin-bottom: 24px;
+            display: inline-block;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 20px;
+        }
+
+        h1 {
+            font-size: 40px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+        }
+
+        .tagline {
+            font-size: 20px;
+            color: var(--text-dim);
+            max-width: 480px;
+            margin: 0 auto 32px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .badge {
+            font-family: var(--mono);
+            font-size: 13px;
+            padding: 6px 14px;
+            border-radius: 6px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        .badge strong {
+            color: var(--text);
+        }
+
+        .badge.green strong { color: var(--green); }
+        .badge.blue strong { color: var(--blue); }
+        .badge.purple strong { color: var(--accent); }
+
+        /* Install */
+        .install-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 12px;
+        }
+
+        .install-block code {
+            font-family: var(--mono);
+            font-size: 14px;
+            color: var(--green);
+            word-break: break-all;
+        }
+
+        .install-hint {
+            font-size: 13px;
+            color: var(--text-dim);
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .install-hint a {
+            color: var(--blue);
+            text-decoration: none;
+        }
+
+        .install-hint a:hover {
+            text-decoration: underline;
+        }
+
+        /* Sections */
+        section {
+            padding: 48px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 24px;
+        }
+
+        h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        p {
+            color: var(--text-dim);
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        /* Stats grid */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: var(--mono);
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.green { color: var(--green); }
+        .stat-value.blue { color: var(--blue); }
+        .stat-value.purple { color: var(--accent); }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Reasoning cards */
+        .reason {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            margin-bottom: 16px;
+        }
+
+        .reason h3 {
+            color: var(--text);
+        }
+
+        .reason p {
+            margin-bottom: 0;
+        }
+
+        .reason code {
+            font-family: var(--mono);
+            font-size: 13px;
+            background: rgba(123, 97, 255, 0.1);
+            color: var(--accent);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .versus {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 16px 0 0;
+        }
+
+        .vs-card {
+            padding: 16px;
+            border-radius: 8px;
+            font-family: var(--mono);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .vs-card.them {
+            background: rgba(224, 64, 64, 0.08);
+            border: 1px solid rgba(224, 64, 64, 0.2);
+            color: var(--red);
+        }
+
+        .vs-card.us {
+            background: rgba(46, 164, 79, 0.08);
+            border: 1px solid rgba(46, 164, 79, 0.2);
+            color: var(--green);
+        }
+
+        .vs-val {
+            font-size: 24px;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* How it works */
+        .how-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            font-family: var(--mono);
+            font-size: 14px;
+            line-height: 2;
+            color: var(--text-dim);
+            overflow-x: auto;
+        }
+
+        .how-block .key { color: var(--accent); font-weight: 600; }
+        .how-block .fn { color: var(--blue); }
+        .how-block .result { color: var(--green); }
+        .how-block .arrow { color: var(--text-dim); }
+
+        /* Features table */
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        @media (max-width: 540px) {
+            .features-grid { grid-template-columns: 1fr; }
+            .versus { grid-template-columns: 1fr; }
+        }
+
+        .feature {
+            padding: 16px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .feature-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin: 0;
+        }
+
+        /* Permissions */
+        .perm-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .perm {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .perm-icon {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .perm-name {
+            font-weight: 600;
+            min-width: 140px;
+        }
+
+        .perm-why {
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 13px;
+        }
+
+        footer a {
+            color: var(--text-dim);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: var(--text);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-icon">&#127908;</div>
+        <h1>KeyMute</h1>
+        <p class="tagline">One shortcut to mute your mic. Every app. Instantly.</p>
+
+        <div class="badges">
+            <span class="badge">macOS 13+</span>
+            <span class="badge green">Binary: <strong>~700 KB</strong></span>
+            <span class="badge blue">Idle RAM: <strong>~15 MB</strong></span>
+            <span class="badge purple">Default: <strong>&#8984;&#8679;0</strong></span>
+        </div>
+
+        <div class="install-block">
+            <code>curl -fsSL https://raw.githubusercontent.com/ankitaniket/KeyMute/main/install.sh | bash</code>
+        </div>
+        <p class="install-hint">
+            Or download the DMG from <a href="https://github.com/ankitaniket/KeyMute/releases">Releases</a>
+        </p>
+    </div>
+
+    <!-- Numbers -->
+    <section>
+        <h2>By the numbers</h2>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value green">~700 KB</div>
+                <div class="stat-label">Binary size</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value blue">~15 MB</div>
+                <div class="stat-label">Idle RAM</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value purple">0</div>
+                <div class="stat-label">Windows</div>
+            </div>
+        </div>
+        <p>
+            No windows means no view hierarchies sitting in memory. No SwiftUI runtime loaded for a settings
+            screen you open once a month. No <code>NSHostingView</code>, no diffing engine, no layout solver
+            idling in the background. The entire UI is an <code>NSStatusItem</code>, an <code>NSMenu</code>,
+            and a single <code>NSPanel</code> for the toast — allocated once, reused forever.
+        </p>
+    </section>
+
+    <!-- Why this is different -->
+    <section>
+        <h2>Why this exists</h2>
+
+        <div class="reason">
+            <h3>~15 MB idle. Not 150.</h3>
+            <p>
+                Most "simple" menu bar apps ship a full settings window, a SwiftUI runtime, and an
+                <code>NSHostingView</code> — even if you open settings once a month. That's 50-150 MB of
+                idle RAM for a mute button. KeyMute controls everything through the menu bar dropdown.
+                No windows, no hidden view trees, no wasted memory.
+            </p>
+            <div class="versus">
+                <div class="vs-card them">
+                    <span class="vs-val">50-150 MB</span>
+                    Typical menu bar app
+                </div>
+                <div class="vs-card us">
+                    <span class="vs-val">~15 MB</span>
+                    KeyMute
+                </div>
+            </div>
+        </div>
+
+        <div class="reason">
+            <h3>OS-level mute, not app-level</h3>
+            <p>
+                Writes <code>kAudioDevicePropertyMute</code> on the system input device via CoreAudio.
+                Same property macOS reads in System Settings &gt; Sound. Every app using the mic —
+                Zoom, Meet, Teams, Chrome, OBS — immediately reads silence. No per-app integration,
+                no accessibility hacks, no screen recording permission.
+            </p>
+        </div>
+
+        <div class="reason">
+            <h3>No Accessibility permission</h3>
+            <p>
+                Global shortcut uses Carbon <code>RegisterEventHotKey</code>. No Input Monitoring.
+                No Accessibility prompt. No "KeyMute wants to control your computer" dialog.
+                Just Microphone permission on first use — because that's what the app actually does.
+            </p>
+        </div>
+
+        <div class="reason">
+            <h3>Invisible to screen share</h3>
+            <p>
+                The toast HUD uses <code>sharingType = .none</code>. When you mute during a screen share,
+                you see the confirmation toast. Your audience doesn't. No awkward "Muted" popups in your
+                demo or presentation.
+            </p>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section>
+        <h2>How it works</h2>
+        <div class="how-block">
+            <span class="key">&#8984;&#8679;0</span>
+            <span class="arrow">&nbsp;&rarr;&nbsp;</span>
+            <span class="fn">AudioObjectSetPropertyData(kAudioDevicePropertyMute, 1)</span><br>
+            <span class="arrow">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rarr;&nbsp;</span>
+            <span class="result">Zoom: silence &nbsp;|&nbsp; Meet: silence &nbsp;|&nbsp; Teams: silence &nbsp;|&nbsp; Everything: silence</span>
+        </div>
+        <p style="margin-top: 16px;">
+            One CoreAudio call. The OS propagates the mute to every process reading from the input device.
+            Property listeners keep the icon in sync if something else changes the mute state externally.
+        </p>
+    </section>
+
+    <!-- Features -->
+    <section>
+        <h2>Features</h2>
+        <div class="features-grid">
+            <div class="feature">
+                <div class="feature-name">System-wide mute</div>
+                <p class="feature-desc">Works across all apps simultaneously via CoreAudio</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Global shortcut</div>
+                <p class="feature-desc">Default &#8984;&#8679;0, fully customizable</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Force Mute / Unmute</div>
+                <p class="feature-desc">Separate shortcuts for scripting or Stream Deck</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Device picker</div>
+                <p class="feature-desc">Pin a mic or follow system default, per-device memory</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Auto-mute on Focus</div>
+                <p class="feature-desc">Mutes when macOS DND / Focus turns on</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Auto-mute on sleep</div>
+                <p class="feature-desc">Mutes when you close the lid</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">3 icon styles</div>
+                <p class="feature-desc">Adaptive, Colorful, or Monochrome</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Toast HUD</div>
+                <p class="feature-desc">Confirmation popup, invisible to screen share</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Launch at login</div>
+                <p class="feature-desc">Modern SMAppService API</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Auto-update</div>
+                <p class="feature-desc">Built-in via Sparkle</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">"MUTED" label</div>
+                <p class="feature-desc">Optional text next to the menu bar icon</p>
+            </div>
+            <div class="feature">
+                <div class="feature-name">Stays in sync</div>
+                <p class="feature-desc">CoreAudio listeners track external mute changes</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Permissions -->
+    <section>
+        <h2>Permissions</h2>
+        <div class="perm-grid">
+            <div class="perm">
+                <div class="perm-icon">&#9989;</div>
+                <span class="perm-name">Microphone</span>
+                <span class="perm-why">CoreAudio mute writes are TCC-gated</span>
+            </div>
+            <div class="perm">
+                <div class="perm-icon">&#10060;</div>
+                <span class="perm-name">Accessibility</span>
+                <span class="perm-why">Carbon hotkeys don't need it</span>
+            </div>
+            <div class="perm">
+                <div class="perm-icon">&#10060;</div>
+                <span class="perm-name">Screen Recording</span>
+                <span class="perm-why">Nothing is captured</span>
+            </div>
+            <div class="perm">
+                <div class="perm-icon">&#10060;</div>
+                <span class="perm-name">Input Monitoring</span>
+                <span class="perm-why">Scoped hotkeys, not raw keystrokes</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="https://github.com/ankitaniket/KeyMute/releases">Releases</a>
+            <a href="https://github.com/ankitaniket/KeyMute/issues">Report an issue</a>
+            <a href="https://github.com/ankitaniket/KeyMute">GitHub</a>
+        </div>
+        <p>&copy; 2026 Ankit Aniket. All rights reserved. macOS 13 Ventura or later.</p>
+    </footer>
+
+</div>
+
+</body>
+</html>
