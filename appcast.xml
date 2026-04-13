@@ -1,0 +1,31 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>Mutify</title>
+        <item>
+            <title>Mutify 1.1.0</title>
+            <pubDate>Sat, 11 Apr 2026 14:19:51 +0530</pubDate>
+            <sparkle:version>2</sparkle:version>
+            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>13.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[
+                <h2>Mutify 1.1.0 — Tabbed Settings, device picker, auto-update, and more</h2>
+                <h3>New features</h3>
+                <ul>
+                    <li>Show / hide menu bar icon and Dock icon from Settings.</li>
+                    <li>Input device picker with per-device mute memory — pin a specific mic or follow the system default.</li>
+                    <li>Separate <strong>Force Mute</strong> and <strong>Force Unmute</strong> global shortcuts (in addition to Toggle).</li>
+                    <li>Auto-mute when macOS Focus / Do Not Disturb turns on.</li>
+                    <li>Three menu bar icon styles: Adaptive, Colorful, Monochrome.</li>
+                    <li>Optional "MUTED" label next to the icon when muted.</li>
+                    <li><strong>Built-in auto-update via Sparkle</strong> — Check for Updates is now in the menu.</li>
+                </ul>
+                <h3>Fixes</h3>
+                <ul>
+                    <li>Sparkle framework load failure resolved.</li>
+                </ul>
+            ]]></description>
+            <enclosure url="https://github.com/ankitaniket/KeyMute/releases/download/v1.1.0/Mutify-1.1.0.dmg" length="1740405" type="application/octet-stream" sparkle:edSignature="jmbWE9JZQR0wjqgmNXtJwt1IPoqs4EoOY/skcInT79lBUd2CYX59fD5MaAWrYqnJbDpERmpcSFB5tZTsux5rDA=="/>
+        </item>
+    </channel>
+</rss>
