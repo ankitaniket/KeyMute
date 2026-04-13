@@ -4,567 +4,1134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KeyMute — System-wide mic mute for macOS</title>
-    <meta name="description" content="One shortcut to mute your mic across every app. ~700 KB binary, ~15 MB idle RAM. Pure CoreAudio, no Electron.">
+    <meta name="description" content="One keyboard shortcut to mute your mic across every app. 700 KB binary, 15 MB idle RAM. Pure CoreAudio, zero bloat.">
+    <meta property="og:title" content="KeyMute — System-wide mic mute for macOS">
+    <meta property="og:description" content="One keyboard shortcut to mute your mic across every app. No windows, no bloat. Just CoreAudio.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ankitaniket.github.io/KeyMute/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0a0a0a;
-            --surface: #141414;
-            --border: #222;
-            --text: #e5e5e5;
-            --text-dim: #888;
-            --accent: #7B61FF;
-            --red: #e04040;
-            --green: #2ea44f;
-            --blue: #58a6ff;
-            --mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', Menlo, monospace;
-            --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            --cream: #faf8f5;
+            --warm-white: #f5f1ec;
+            --sand: #ebe5dc;
+            --charcoal: #1a1a1a;
+            --ink: #2d2d2d;
+            --stone: #6b6560;
+            --warm-gray: #9a938b;
+            --muted-red: #b83a2a;
+            --deep-red: #8b2d20;
+            --green-dim: #3d7a47;
+            --blue-link: #2563eb;
+            --serif: 'Fraunces', Georgia, serif;
+            --sans: 'Outfit', system-ui, sans-serif;
+            --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html { scroll-behavior: smooth; }
+
         body {
             font-family: var(--sans);
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
+            background: var(--cream);
+            color: var(--charcoal);
+            line-height: 1.65;
             -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 0 24px;
+        ::selection {
+            background: var(--muted-red);
+            color: white;
         }
 
-        /* Hero */
-        .hero {
-            padding: 80px 0 60px;
-            text-align: center;
-        }
-
-        .hero-icon {
-            font-size: 48px;
-            margin-bottom: 24px;
-            display: inline-block;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 16px 20px;
-        }
-
-        h1 {
-            font-size: 40px;
-            font-weight: 700;
-            letter-spacing: -1px;
-            margin-bottom: 16px;
-        }
-
-        .tagline {
-            font-size: 20px;
-            color: var(--text-dim);
-            max-width: 480px;
-            margin: 0 auto 32px;
-        }
-
-        .badges {
+        /* ---- NAV ---- */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 32px;
             display: flex;
-            gap: 12px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 40px;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(250, 248, 245, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0,0,0,0.04);
         }
 
-        .badge {
-            font-family: var(--mono);
-            font-size: 13px;
-            padding: 6px 14px;
-            border-radius: 6px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-        }
-
-        .badge strong {
-            color: var(--text);
-        }
-
-        .badge.green strong { color: var(--green); }
-        .badge.blue strong { color: var(--blue); }
-        .badge.purple strong { color: var(--accent); }
-
-        /* Install */
-        .install-block {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 12px;
-        }
-
-        .install-block code {
-            font-family: var(--mono);
-            font-size: 14px;
-            color: var(--green);
-            word-break: break-all;
-        }
-
-        .install-hint {
-            font-size: 13px;
-            color: var(--text-dim);
-            text-align: center;
-            margin-bottom: 60px;
-        }
-
-        .install-hint a {
-            color: var(--blue);
+        .nav-brand {
+            font-family: var(--serif);
+            font-weight: 800;
+            font-size: 20px;
+            color: var(--charcoal);
             text-decoration: none;
-        }
-
-        .install-hint a:hover {
-            text-decoration: underline;
-        }
-
-        /* Sections */
-        section {
-            padding: 48px 0;
-            border-top: 1px solid var(--border);
-        }
-
-        h2 {
-            font-size: 28px;
-            font-weight: 700;
             letter-spacing: -0.5px;
-            margin-bottom: 24px;
         }
 
-        h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            align-items: center;
         }
 
-        p {
-            color: var(--text-dim);
-            margin-bottom: 16px;
-            font-size: 16px;
-        }
-
-        /* Stats grid */
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 40px;
-        }
-
-        .stat {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px;
-            text-align: center;
-        }
-
-        .stat-value {
-            font-family: var(--mono);
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .stat-value.green { color: var(--green); }
-        .stat-value.blue { color: var(--blue); }
-        .stat-value.purple { color: var(--accent); }
-
-        .stat-label {
-            font-size: 13px;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Reasoning cards */
-        .reason {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 28px;
-            margin-bottom: 16px;
-        }
-
-        .reason h3 {
-            color: var(--text);
-        }
-
-        .reason p {
-            margin-bottom: 0;
-        }
-
-        .reason code {
-            font-family: var(--mono);
-            font-size: 13px;
-            background: rgba(123, 97, 255, 0.1);
-            color: var(--accent);
-            padding: 2px 6px;
-            border-radius: 4px;
-        }
-
-        .versus {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin: 16px 0 0;
-        }
-
-        .vs-card {
-            padding: 16px;
-            border-radius: 8px;
-            font-family: var(--mono);
-            font-size: 13px;
-            text-align: center;
-        }
-
-        .vs-card.them {
-            background: rgba(224, 64, 64, 0.08);
-            border: 1px solid rgba(224, 64, 64, 0.2);
-            color: var(--red);
-        }
-
-        .vs-card.us {
-            background: rgba(46, 164, 79, 0.08);
-            border: 1px solid rgba(46, 164, 79, 0.2);
-            color: var(--green);
-        }
-
-        .vs-val {
-            font-size: 24px;
-            font-weight: 700;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        /* How it works */
-        .how-block {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 28px;
-            font-family: var(--mono);
+        .nav-links a {
             font-size: 14px;
-            line-height: 2;
-            color: var(--text-dim);
+            font-weight: 500;
+            color: var(--stone);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--charcoal); }
+
+        .nav-cta {
+            font-size: 13px !important;
+            font-weight: 600 !important;
+            color: white !important;
+            background: var(--charcoal);
+            padding: 8px 18px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .nav-cta:hover { background: var(--ink) !important; }
+
+        /* ---- LAYOUT ---- */
+        .wrap {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 0 28px;
+        }
+
+        .wrap-wide {
+            max-width: 1020px;
+            margin: 0 auto;
+            padding: 0 28px;
+        }
+
+        /* ---- HERO ---- */
+        .hero {
+            padding: 160px 0 80px;
+            text-align: center;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted-red);
+            background: rgba(184, 58, 42, 0.08);
+            border: 1px solid rgba(184, 58, 42, 0.15);
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-bottom: 28px;
+            letter-spacing: 0.5px;
+        }
+
+        .hero h1 {
+            font-family: var(--serif);
+            font-size: clamp(42px, 7vw, 72px);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+            font-variation-settings: 'opsz' 144;
+        }
+
+        .hero h1 em {
+            font-style: italic;
+            color: var(--muted-red);
+        }
+
+        .hero-sub {
+            font-size: 19px;
+            color: var(--stone);
+            max-width: 520px;
+            margin: 0 auto 40px;
+            font-weight: 400;
+            line-height: 1.6;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 48px;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--sans);
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            background: var(--charcoal);
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--sans);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--charcoal);
+            background: transparent;
+            padding: 14px 28px;
+            border-radius: 12px;
+            text-decoration: none;
+            border: 1.5px solid var(--sand);
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--charcoal);
+        }
+
+        .hero-install {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--charcoal);
+            border-radius: 12px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .hero-install code {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: #a8e6a3;
+            white-space: nowrap;
             overflow-x: auto;
         }
 
-        .how-block .key { color: var(--accent); font-weight: 600; }
-        .how-block .fn { color: var(--blue); }
-        .how-block .result { color: var(--green); }
-        .how-block .arrow { color: var(--text-dim); }
-
-        /* Features table */
-        .features-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        @media (max-width: 540px) {
-            .features-grid { grid-template-columns: 1fr; }
-            .versus { grid-template-columns: 1fr; }
-        }
-
-        .feature {
-            padding: 16px 20px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-        }
-
-        .feature-name {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text);
+        .hero-install-label {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: #777;
             margin-bottom: 4px;
         }
 
-        .feature-desc {
-            font-size: 13px;
-            color: var(--text-dim);
-            margin: 0;
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #aaa;
+            font-family: var(--mono);
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
 
-        /* Permissions */
-        .perm-grid {
+        .copy-btn:hover { background: rgba(255,255,255,0.2); color: white; }
+
+        /* ---- STATS STRIP ---- */
+        .stats-strip {
+            padding: 64px 0;
+            border-top: 1px solid var(--sand);
+            border-bottom: 1px solid var(--sand);
+        }
+
+        .stats-row {
             display: grid;
-            gap: 8px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
         }
 
-        .perm {
+        .stat-item {
+            text-align: center;
+            padding: 8px 16px;
+        }
+
+        .stat-item + .stat-item {
+            border-left: 1px solid var(--sand);
+        }
+
+        .stat-num {
+            font-family: var(--serif);
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--charcoal);
+            letter-spacing: -1px;
+            font-variation-settings: 'opsz' 144;
+        }
+
+        .stat-num span {
+            font-size: 20px;
+            color: var(--warm-gray);
+            font-weight: 400;
+        }
+
+        .stat-desc {
+            font-size: 13px;
+            color: var(--warm-gray);
+            margin-top: 4px;
+            font-weight: 400;
+        }
+
+        /* ---- PROBLEM ---- */
+        .problem {
+            padding: 100px 0 80px;
+        }
+
+        .section-label {
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--muted-red);
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-family: var(--serif);
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            font-variation-settings: 'opsz' 72;
+        }
+
+        .section-body {
+            font-size: 17px;
+            color: var(--stone);
+            max-width: 600px;
+            line-height: 1.75;
+        }
+
+        .scenario {
+            margin-top: 40px;
+            background: var(--warm-white);
+            border-radius: 16px;
+            padding: 36px 40px;
+            border-left: 3px solid var(--muted-red);
+        }
+
+        .scenario p {
+            font-size: 16px;
+            color: var(--ink);
+            line-height: 1.8;
+        }
+
+        .scenario strong {
+            color: var(--charcoal);
+        }
+
+        .scenario .fix {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--sand);
+            font-family: var(--mono);
+            font-size: 14px;
+            color: var(--green-dim);
+        }
+
+        /* ---- WHY ---- */
+        .why {
+            padding: 80px 0;
+        }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 48px;
+        }
+
+        .why-card {
+            padding: 36px;
+            background: var(--warm-white);
+            border-radius: 16px;
+            transition: transform 0.2s;
+        }
+
+        .why-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .why-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .why-card h3 {
+            font-family: var(--serif);
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            font-variation-settings: 'opsz' 48;
+        }
+
+        .why-card p {
+            font-size: 15px;
+            color: var(--stone);
+            line-height: 1.7;
+        }
+
+        .why-card code {
+            font-family: var(--mono);
+            font-size: 12px;
+            background: rgba(184, 58, 42, 0.08);
+            color: var(--deep-red);
+            padding: 2px 7px;
+            border-radius: 4px;
+        }
+
+        .comparison-bar {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            align-items: stretch;
+        }
+
+        .comp-item {
+            flex: 1;
+            padding: 16px;
+            border-radius: 10px;
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+
+        .comp-them {
+            background: rgba(184, 58, 42, 0.06);
+            color: var(--muted-red);
+        }
+
+        .comp-us {
+            background: rgba(61, 122, 71, 0.08);
+            color: var(--green-dim);
+        }
+
+        .comp-val {
+            display: block;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 2px;
+            font-family: var(--serif);
+        }
+
+        /* ---- HOW IT WORKS ---- */
+        .how {
+            padding: 80px 0;
+            border-top: 1px solid var(--sand);
+        }
+
+        .how-flow {
+            margin-top: 40px;
             display: flex;
             align-items: center;
+            gap: 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .flow-step {
+            text-align: center;
+            padding: 24px 28px;
+        }
+
+        .flow-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .flow-label {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--charcoal);
+        }
+
+        .flow-sub {
+            font-size: 12px;
+            color: var(--warm-gray);
+            margin-top: 2px;
+        }
+
+        .flow-arrow {
+            font-size: 20px;
+            color: var(--sand);
+            padding: 0 4px;
+        }
+
+        .how-detail {
+            margin-top: 40px;
+            background: var(--charcoal);
+            border-radius: 16px;
+            padding: 32px 36px;
+            font-family: var(--mono);
+            font-size: 14px;
+            line-height: 2.2;
+            color: #999;
+            overflow-x: auto;
+        }
+
+        .how-detail .comment { color: #555; }
+        .how-detail .fn { color: #7ec8e3; }
+        .how-detail .str { color: #a8e6a3; }
+        .how-detail .key { color: #f0a8a8; }
+
+        /* ---- FEATURES ---- */
+        .features {
+            padding: 80px 0;
+            border-top: 1px solid var(--sand);
+        }
+
+        .feat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
-            padding: 12px 16px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            margin-top: 48px;
+        }
+
+        .feat {
+            padding: 24px 28px;
+            background: var(--warm-white);
+            border-radius: 12px;
+            transition: transform 0.15s;
+        }
+
+        .feat:hover { transform: translateY(-2px); }
+
+        .feat-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .feat-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+            color: var(--charcoal);
+        }
+
+        .feat-desc {
+            font-size: 13px;
+            color: var(--warm-gray);
+            line-height: 1.5;
+        }
+
+        /* ---- COMPARISON TABLE ---- */
+        .compare {
+            padding: 80px 0;
+            border-top: 1px solid var(--sand);
+        }
+
+        .compare-table {
+            width: 100%;
+            margin-top: 40px;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--warm-white);
+            border-radius: 16px;
+            overflow: hidden;
             font-size: 14px;
         }
 
-        .perm-icon {
+        .compare-table th {
+            text-align: left;
+            padding: 16px 24px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--warm-gray);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--sand);
+        }
+
+        .compare-table th:last-child {
+            text-align: center;
+            color: var(--muted-red);
+        }
+
+        .compare-table td {
+            padding: 14px 24px;
+            border-bottom: 1px solid rgba(0,0,0,0.03);
+            color: var(--stone);
+        }
+
+        .compare-table td:last-child {
+            text-align: center;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+
+        .compare-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .check { color: var(--green-dim); }
+        .cross { color: var(--muted-red); opacity: 0.5; }
+
+        /* ---- PERMISSIONS ---- */
+        .permissions {
+            padding: 80px 0;
+            border-top: 1px solid var(--sand);
+        }
+
+        .perm-list {
+            margin-top: 36px;
+            display: grid;
+            gap: 8px;
+            max-width: 560px;
+        }
+
+        .perm-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 20px;
+            background: var(--warm-white);
+            border-radius: 10px;
+        }
+
+        .perm-status {
             font-size: 18px;
-            width: 24px;
+            width: 28px;
             text-align: center;
             flex-shrink: 0;
         }
 
-        .perm-name {
+        .perm-label {
             font-weight: 600;
-            min-width: 140px;
+            font-size: 14px;
+            min-width: 130px;
         }
 
-        .perm-why {
-            color: var(--text-dim);
+        .perm-note {
             font-size: 13px;
+            color: var(--warm-gray);
         }
 
-        /* Footer */
-        footer {
-            padding: 48px 0;
-            border-top: 1px solid var(--border);
+        /* ---- CTA ---- */
+        .cta {
+            padding: 100px 0;
             text-align: center;
-            color: var(--text-dim);
+            border-top: 1px solid var(--sand);
+        }
+
+        .cta h2 {
+            font-family: var(--serif);
+            font-size: clamp(28px, 4vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            font-variation-settings: 'opsz' 72;
+        }
+
+        .cta p {
+            font-size: 17px;
+            color: var(--stone);
+            margin-bottom: 36px;
+        }
+
+        .cta-install {
+            max-width: 580px;
+            margin: 36px auto 0;
+            background: var(--charcoal);
+            border-radius: 12px;
+            padding: 18px 24px;
+            text-align: left;
+        }
+
+        .cta-install code {
+            font-family: var(--mono);
             font-size: 13px;
+            color: #a8e6a3;
+        }
+
+        /* ---- FOOTER ---- */
+        footer {
+            padding: 40px 0;
+            border-top: 1px solid var(--sand);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--warm-gray);
         }
 
         footer a {
-            color: var(--text-dim);
+            color: var(--warm-gray);
             text-decoration: none;
+            transition: color 0.2s;
         }
 
-        footer a:hover {
-            color: var(--text);
-        }
+        footer a:hover { color: var(--charcoal); }
 
         .footer-links {
             display: flex;
             gap: 24px;
-            justify-content: center;
-            margin-bottom: 16px;
+        }
+
+        /* ---- RESPONSIVE ---- */
+        @media (max-width: 768px) {
+            nav { padding: 14px 20px; }
+            .nav-links { gap: 16px; }
+            .wrap, .wrap-wide { padding: 0 20px; }
+            .hero { padding: 120px 0 60px; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .stat-item + .stat-item { border-left: none; }
+            .stat-item:nth-child(odd) { border-right: 1px solid var(--sand); }
+            .stat-item:nth-child(-n+2) { border-bottom: 1px solid var(--sand); padding-bottom: 20px; }
+            .stat-item:nth-child(n+3) { padding-top: 20px; }
+            .why-grid { grid-template-columns: 1fr; }
+            .feat-grid { grid-template-columns: 1fr 1fr; }
+            .flow-arrow { display: none; }
+            .hero-install { flex-direction: column; align-items: flex-start; }
+            .scenario { padding: 28px; }
+            footer { flex-direction: column; gap: 16px; text-align: center; }
+        }
+
+        @media (max-width: 480px) {
+            .feat-grid { grid-template-columns: 1fr; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .comparison-bar { flex-direction: column; }
+            .hero-actions { flex-direction: column; }
+        }
+
+        /* ---- FADE IN ---- */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
 
-<div class="container">
+<!-- Nav -->
+<nav>
+    <a href="#" class="nav-brand">KeyMute</a>
+    <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="https://github.com/ankitaniket/KeyMute" target="_blank">GitHub</a>
+        <a href="https://github.com/ankitaniket/KeyMute/releases" class="nav-cta">Download</a>
+    </div>
+</nav>
 
-    <!-- Hero -->
+<!-- Hero -->
+<div class="wrap">
     <div class="hero">
-        <div class="hero-icon">&#127908;</div>
-        <h1>KeyMute</h1>
-        <p class="tagline">One shortcut to mute your mic. Every app. Instantly.</p>
+        <div class="hero-badge">macOS 13+ &middot; Free &middot; 700 KB</div>
+        <h1>Mute your mic.<br><em>Every app. Instantly.</em></h1>
+        <p class="hero-sub">
+            One global keyboard shortcut that mutes your microphone at the
+            operating system level. Zoom, Meet, Teams, Chrome &mdash; everything
+            goes silent. No per-app integration needed.
+        </p>
+        <div class="hero-actions">
+            <a href="https://github.com/ankitaniket/KeyMute/releases" class="btn-primary">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 12L3 7h3V2h4v5h3L8 12z" fill="currentColor"/><path d="M2 14h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Download DMG
+            </a>
+            <a href="#install" class="btn-secondary">One-line install</a>
+        </div>
+        <div class="hero-install" id="install">
+            <div>
+                <div class="hero-install-label">$ install</div>
+                <code>curl -fsSL https://raw.githubusercontent.com/ankitaniket/KeyMute/main/install.sh | bash</code>
+            </div>
+            <button class="copy-btn" onclick="navigator.clipboard.writeText('curl -fsSL https://raw.githubusercontent.com/ankitaniket/KeyMute/main/install.sh | bash');this.textContent='copied!';setTimeout(()=>this.textContent='copy',1500)">copy</button>
+        </div>
+    </div>
+</div>
 
-        <div class="badges">
-            <span class="badge">macOS 13+</span>
-            <span class="badge green">Binary: <strong>~700 KB</strong></span>
-            <span class="badge blue">Idle RAM: <strong>~15 MB</strong></span>
-            <span class="badge purple">Default: <strong>&#8984;&#8679;0</strong></span>
+<!-- Stats -->
+<div class="stats-strip">
+    <div class="wrap-wide">
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-num">~700<span> KB</span></div>
+                <div class="stat-desc">Binary size</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">~15<span> MB</span></div>
+                <div class="stat-desc">Idle memory</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">0</div>
+                <div class="stat-desc">Windows allocated</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">1</div>
+                <div class="stat-desc">Permission needed</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Problem -->
+<div class="wrap">
+    <section class="problem fade-in">
+        <div class="section-label">The problem</div>
+        <h2 class="section-title">You&rsquo;re presenting. Someone<br>asks a question. You need to mute.</h2>
+        <p class="section-body">
+            Zoom&rsquo;s mute is in one corner. Meet&rsquo;s is in another. Teams hides it behind
+            a toolbar. If you&rsquo;re sharing your screen, you have to alt-tab back to the call
+            just to click a button &mdash; and everyone on the call watches you do it.
+        </p>
+        <div class="scenario">
+            <p>
+                You just want <strong>one shortcut that works everywhere</strong>, regardless of
+                which app is in focus, regardless of which conferencing tool you&rsquo;re using,
+                regardless of whether you&rsquo;re mid-presentation or deep in your editor.
+            </p>
+            <div class="fix">
+                &#8984;&#8679;0 &rarr; mic muted at the OS level &rarr; every app hears silence instantly
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Why -->
+<div class="wrap" id="why">
+    <section class="why fade-in">
+        <div class="section-label">Why developers choose this</div>
+        <h2 class="section-title">Built like a tool you&rsquo;d write yourself</h2>
+
+        <div class="why-grid">
+            <div class="why-card full-width">
+                <h3>15 MB idle. Not 150.</h3>
+                <p>
+                    Most &ldquo;simple&rdquo; menu bar apps ship a SwiftUI settings window, an
+                    <code>NSHostingView</code>, and an entire diffing engine &mdash; sitting in memory
+                    for a screen you open once a month. That&rsquo;s 50&ndash;150 MB of idle RAM for a
+                    mute button. KeyMute has <strong>zero windows</strong>. The entire UI is an
+                    <code>NSStatusItem</code>, an <code>NSMenu</code>, and a single
+                    <code>NSPanel</code> for the toast. No view hierarchies. No layout solver.
+                    No wasted memory.
+                </p>
+                <div class="comparison-bar">
+                    <div class="comp-item comp-them">
+                        <span class="comp-val">50&ndash;150 MB</span>
+                        Typical menu bar app
+                    </div>
+                    <div class="comp-item comp-us">
+                        <span class="comp-val">~15 MB</span>
+                        KeyMute
+                    </div>
+                </div>
+            </div>
+
+            <div class="why-card">
+                <h3>OS-level mute</h3>
+                <p>
+                    Writes <code>kAudioDevicePropertyMute</code> on the system input device
+                    via CoreAudio. Same property that System Settings reads. Every app &mdash;
+                    Zoom, Meet, Teams, Chrome, OBS &mdash; immediately reads silence. No
+                    per-app integration. No accessibility hacks.
+                </p>
+            </div>
+
+            <div class="why-card">
+                <h3>No Accessibility permission</h3>
+                <p>
+                    Global shortcut uses Carbon <code>RegisterEventHotKey</code>. No Input
+                    Monitoring. No &ldquo;wants to control your computer&rdquo; dialog. Just
+                    Microphone permission on first use &mdash; because that&rsquo;s what the
+                    app actually does.
+                </p>
+            </div>
+
+            <div class="why-card">
+                <h3>Invisible to screen share</h3>
+                <p>
+                    The toast HUD uses <code>sharingType = .none</code>. You see the
+                    &ldquo;Muted&rdquo; confirmation. Your audience doesn&rsquo;t. No
+                    awkward popups in your demo or presentation.
+                </p>
+            </div>
+
+            <div class="why-card">
+                <h3>700 KB binary</h3>
+                <p>
+                    Pure AppKit + CoreAudio. No Electron. No web views. No bundled
+                    runtimes. Smaller than most favicons. Launches in under a second,
+                    because there&rsquo;s nothing to load.
+                </p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- How it works -->
+<div class="wrap" id="how">
+    <section class="how fade-in">
+        <div class="section-label">Under the hood</div>
+        <h2 class="section-title">One CoreAudio call. That&rsquo;s it.</h2>
+        <p class="section-body">
+            KeyMute writes to the same property that macOS reads in System Settings &gt;
+            Sound &gt; Input. The OS propagates the mute to every process reading from
+            the input device. Property listeners keep the icon in sync if something
+            else changes the state externally.
+        </p>
+
+        <div class="how-flow">
+            <div class="flow-step">
+                <div class="flow-icon">&#9000;</div>
+                <div class="flow-label">&#8984;&#8679;0</div>
+                <div class="flow-sub">You press the shortcut</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+                <div class="flow-icon">&#9881;</div>
+                <div class="flow-label">CoreAudio</div>
+                <div class="flow-sub">Device mute = 1</div>
+            </div>
+            <div class="flow-arrow">&rarr;</div>
+            <div class="flow-step">
+                <div class="flow-icon">&#128263;</div>
+                <div class="flow-label">Silence</div>
+                <div class="flow-sub">Every app, instantly</div>
+            </div>
         </div>
 
-        <div class="install-block">
+        <div class="how-detail">
+            <span class="comment">// That&rsquo;s the entire mute implementation</span><br>
+            <span class="fn">AudioObjectSetPropertyData</span>(<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;deviceID,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&amp;<span class="key">kAudioDevicePropertyMute</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;scope: <span class="str">kAudioDevicePropertyScopeInput</span>,<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;value: <span class="str">1</span><br>
+            )<br>
+            <span class="comment">// Zoom: silence | Meet: silence | Teams: silence | Everything: silence</span>
+        </div>
+    </section>
+</div>
+
+<!-- Features -->
+<div class="wrap-wide" id="features">
+    <section class="features fade-in">
+        <div class="section-label">Everything it does</div>
+        <h2 class="section-title">Packed into 700 KB</h2>
+
+        <div class="feat-grid">
+            <div class="feat">
+                <div class="feat-icon">&#127908;</div>
+                <div class="feat-name">System-wide mute</div>
+                <div class="feat-desc">CoreAudio device-level mute across all apps simultaneously</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#9000;</div>
+                <div class="feat-name">Global shortcut</div>
+                <div class="feat-desc">Default &#8984;&#8679;0, fully customizable. No Accessibility needed.</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#128274;</div>
+                <div class="feat-name">Force Mute / Unmute</div>
+                <div class="feat-desc">Separate shortcuts for Stream Deck, scripting, or automation</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#127911;</div>
+                <div class="feat-name">Device picker</div>
+                <div class="feat-desc">Pin a specific mic or follow system default. Per-device mute memory.</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#127769;</div>
+                <div class="feat-name">Auto-mute on Focus</div>
+                <div class="feat-desc">Automatically mute when macOS Focus / DND turns on</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#128164;</div>
+                <div class="feat-name">Auto-mute on sleep</div>
+                <div class="feat-desc">Close the lid, mic mutes. No hot-mic surprises.</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#127912;</div>
+                <div class="feat-name">3 icon styles</div>
+                <div class="feat-desc">Adaptive, Colorful, or Monochrome menu bar icon</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#128172;</div>
+                <div class="feat-name">Toast HUD</div>
+                <div class="feat-desc">&ldquo;Muted&rdquo; / &ldquo;Unmuted&rdquo; confirmation, invisible to screen share</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#128196;</div>
+                <div class="feat-name">&ldquo;MUTED&rdquo; label</div>
+                <div class="feat-desc">Optional text next to the menu bar icon for extra visibility</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#128260;</div>
+                <div class="feat-name">Launch at login</div>
+                <div class="feat-desc">Modern SMAppService API. Set once, forget forever.</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#128259;</div>
+                <div class="feat-name">Auto-update</div>
+                <div class="feat-desc">Built-in update checking via Sparkle</div>
+            </div>
+            <div class="feat">
+                <div class="feat-icon">&#128257;</div>
+                <div class="feat-name">Stays in sync</div>
+                <div class="feat-desc">CoreAudio listeners catch external mute changes in real time</div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Comparison -->
+<div class="wrap">
+    <section class="compare fade-in">
+        <div class="section-label">How it compares</div>
+        <h2 class="section-title">What you don&rsquo;t get with KeyMute</h2>
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th>Typical menu bar app</th>
+                    <th>KeyMute</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Settings window loaded in memory at all times</td>
+                    <td class="check">No windows. Ever.</td>
+                </tr>
+                <tr>
+                    <td>SwiftUI runtime + NSHostingView overhead</td>
+                    <td class="check">Pure AppKit. No runtime.</td>
+                </tr>
+                <tr>
+                    <td>50&ndash;150 MB idle RAM</td>
+                    <td class="check">~15 MB idle</td>
+                </tr>
+                <tr>
+                    <td>20&ndash;80 MB app bundle</td>
+                    <td class="check">~700 KB</td>
+                </tr>
+                <tr>
+                    <td>Dock icon, main window, menu bar icon</td>
+                    <td class="check">Menu bar only</td>
+                </tr>
+                <tr>
+                    <td>Accessibility permission required</td>
+                    <td class="check">Not needed</td>
+                </tr>
+                <tr>
+                    <td>Per-app mute integration</td>
+                    <td class="check">OS-level. All apps.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<!-- Permissions -->
+<div class="wrap">
+    <section class="permissions fade-in">
+        <div class="section-label">Trust</div>
+        <h2 class="section-title">One permission. That&rsquo;s all.</h2>
+        <p class="section-body">
+            KeyMute asks for exactly one permission &mdash; Microphone &mdash; because
+            that&rsquo;s the only thing it touches. No broad access, no vague justifications.
+        </p>
+        <div class="perm-list">
+            <div class="perm-row">
+                <div class="perm-status">&#9989;</div>
+                <span class="perm-label">Microphone</span>
+                <span class="perm-note">CoreAudio mute writes are TCC-gated by macOS</span>
+            </div>
+            <div class="perm-row">
+                <div class="perm-status">&#10060;</div>
+                <span class="perm-label">Accessibility</span>
+                <span class="perm-note">Carbon hotkeys don&rsquo;t need it</span>
+            </div>
+            <div class="perm-row">
+                <div class="perm-status">&#10060;</div>
+                <span class="perm-label">Screen Recording</span>
+                <span class="perm-note">Nothing is captured</span>
+            </div>
+            <div class="perm-row">
+                <div class="perm-status">&#10060;</div>
+                <span class="perm-label">Input Monitoring</span>
+                <span class="perm-note">Scoped hotkeys, not raw keystrokes</span>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Final CTA -->
+<div class="wrap">
+    <section class="cta fade-in">
+        <h2>Try it. You&rsquo;ll forget it&rsquo;s running.</h2>
+        <p>That&rsquo;s the point.</p>
+        <div class="hero-actions">
+            <a href="https://github.com/ankitaniket/KeyMute/releases" class="btn-primary">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 12L3 7h3V2h4v5h3L8 12z" fill="currentColor"/><path d="M2 14h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                Download DMG
+            </a>
+            <a href="https://github.com/ankitaniket/KeyMute" class="btn-secondary">
+                View on GitHub
+            </a>
+        </div>
+        <div class="cta-install">
             <code>curl -fsSL https://raw.githubusercontent.com/ankitaniket/KeyMute/main/install.sh | bash</code>
         </div>
-        <p class="install-hint">
-            Or download the DMG from <a href="https://github.com/ankitaniket/KeyMute/releases">Releases</a>
-        </p>
-    </div>
-
-    <!-- Numbers -->
-    <section>
-        <h2>By the numbers</h2>
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value green">~700 KB</div>
-                <div class="stat-label">Binary size</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value blue">~15 MB</div>
-                <div class="stat-label">Idle RAM</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value purple">0</div>
-                <div class="stat-label">Windows</div>
-            </div>
-        </div>
-        <p>
-            No windows means no view hierarchies sitting in memory. No SwiftUI runtime loaded for a settings
-            screen you open once a month. No <code>NSHostingView</code>, no diffing engine, no layout solver
-            idling in the background. The entire UI is an <code>NSStatusItem</code>, an <code>NSMenu</code>,
-            and a single <code>NSPanel</code> for the toast — allocated once, reused forever.
-        </p>
     </section>
+</div>
 
-    <!-- Why this is different -->
-    <section>
-        <h2>Why this exists</h2>
-
-        <div class="reason">
-            <h3>~15 MB idle. Not 150.</h3>
-            <p>
-                Most "simple" menu bar apps ship a full settings window, a SwiftUI runtime, and an
-                <code>NSHostingView</code> — even if you open settings once a month. That's 50-150 MB of
-                idle RAM for a mute button. KeyMute controls everything through the menu bar dropdown.
-                No windows, no hidden view trees, no wasted memory.
-            </p>
-            <div class="versus">
-                <div class="vs-card them">
-                    <span class="vs-val">50-150 MB</span>
-                    Typical menu bar app
-                </div>
-                <div class="vs-card us">
-                    <span class="vs-val">~15 MB</span>
-                    KeyMute
-                </div>
-            </div>
-        </div>
-
-        <div class="reason">
-            <h3>OS-level mute, not app-level</h3>
-            <p>
-                Writes <code>kAudioDevicePropertyMute</code> on the system input device via CoreAudio.
-                Same property macOS reads in System Settings &gt; Sound. Every app using the mic —
-                Zoom, Meet, Teams, Chrome, OBS — immediately reads silence. No per-app integration,
-                no accessibility hacks, no screen recording permission.
-            </p>
-        </div>
-
-        <div class="reason">
-            <h3>No Accessibility permission</h3>
-            <p>
-                Global shortcut uses Carbon <code>RegisterEventHotKey</code>. No Input Monitoring.
-                No Accessibility prompt. No "KeyMute wants to control your computer" dialog.
-                Just Microphone permission on first use — because that's what the app actually does.
-            </p>
-        </div>
-
-        <div class="reason">
-            <h3>Invisible to screen share</h3>
-            <p>
-                The toast HUD uses <code>sharingType = .none</code>. When you mute during a screen share,
-                you see the confirmation toast. Your audience doesn't. No awkward "Muted" popups in your
-                demo or presentation.
-            </p>
-        </div>
-    </section>
-
-    <!-- How it works -->
-    <section>
-        <h2>How it works</h2>
-        <div class="how-block">
-            <span class="key">&#8984;&#8679;0</span>
-            <span class="arrow">&nbsp;&rarr;&nbsp;</span>
-            <span class="fn">AudioObjectSetPropertyData(kAudioDevicePropertyMute, 1)</span><br>
-            <span class="arrow">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&rarr;&nbsp;</span>
-            <span class="result">Zoom: silence &nbsp;|&nbsp; Meet: silence &nbsp;|&nbsp; Teams: silence &nbsp;|&nbsp; Everything: silence</span>
-        </div>
-        <p style="margin-top: 16px;">
-            One CoreAudio call. The OS propagates the mute to every process reading from the input device.
-            Property listeners keep the icon in sync if something else changes the mute state externally.
-        </p>
-    </section>
-
-    <!-- Features -->
-    <section>
-        <h2>Features</h2>
-        <div class="features-grid">
-            <div class="feature">
-                <div class="feature-name">System-wide mute</div>
-                <p class="feature-desc">Works across all apps simultaneously via CoreAudio</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Global shortcut</div>
-                <p class="feature-desc">Default &#8984;&#8679;0, fully customizable</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Force Mute / Unmute</div>
-                <p class="feature-desc">Separate shortcuts for scripting or Stream Deck</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Device picker</div>
-                <p class="feature-desc">Pin a mic or follow system default, per-device memory</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Auto-mute on Focus</div>
-                <p class="feature-desc">Mutes when macOS DND / Focus turns on</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Auto-mute on sleep</div>
-                <p class="feature-desc">Mutes when you close the lid</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">3 icon styles</div>
-                <p class="feature-desc">Adaptive, Colorful, or Monochrome</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Toast HUD</div>
-                <p class="feature-desc">Confirmation popup, invisible to screen share</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Launch at login</div>
-                <p class="feature-desc">Modern SMAppService API</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Auto-update</div>
-                <p class="feature-desc">Built-in via Sparkle</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">"MUTED" label</div>
-                <p class="feature-desc">Optional text next to the menu bar icon</p>
-            </div>
-            <div class="feature">
-                <div class="feature-name">Stays in sync</div>
-                <p class="feature-desc">CoreAudio listeners track external mute changes</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Permissions -->
-    <section>
-        <h2>Permissions</h2>
-        <div class="perm-grid">
-            <div class="perm">
-                <div class="perm-icon">&#9989;</div>
-                <span class="perm-name">Microphone</span>
-                <span class="perm-why">CoreAudio mute writes are TCC-gated</span>
-            </div>
-            <div class="perm">
-                <div class="perm-icon">&#10060;</div>
-                <span class="perm-name">Accessibility</span>
-                <span class="perm-why">Carbon hotkeys don't need it</span>
-            </div>
-            <div class="perm">
-                <div class="perm-icon">&#10060;</div>
-                <span class="perm-name">Screen Recording</span>
-                <span class="perm-why">Nothing is captured</span>
-            </div>
-            <div class="perm">
-                <div class="perm-icon">&#10060;</div>
-                <span class="perm-name">Input Monitoring</span>
-                <span class="perm-why">Scoped hotkeys, not raw keystrokes</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
+<!-- Footer -->
+<div class="wrap">
     <footer>
+        <span>&copy; 2026 Ankit Aniket. All rights reserved. macOS 13+.</span>
         <div class="footer-links">
             <a href="https://github.com/ankitaniket/KeyMute/releases">Releases</a>
-            <a href="https://github.com/ankitaniket/KeyMute/issues">Report an issue</a>
+            <a href="https://github.com/ankitaniket/KeyMute/issues">Issues</a>
             <a href="https://github.com/ankitaniket/KeyMute">GitHub</a>
         </div>
-        <p>&copy; 2026 Ankit Aniket. All rights reserved. macOS 13 Ventura or later.</p>
     </footer>
-
 </div>
+
+<script>
+// Fade-in on scroll
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, { threshold: 0.15 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
 
 </body>
 </html>
