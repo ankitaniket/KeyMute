@@ -661,19 +661,46 @@
     line-height: 1.55;
   }
 
+  /* Mobile: tap-to-show bottom sheet */
   @media (max-width: 640px) {
     .hc > .hc-card {
       position: fixed;
-      bottom: 16px;
-      left: 16px;
-      right: 16px;
-      width: auto;
-      transform: translateX(0) translateY(6px);
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      border-radius: 14px 14px 0 0;
+      padding: 20px 24px 28px;
+      transform: translateY(100%);
+      opacity: 0;
+      transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
     }
     .hc:hover > .hc-card {
-      transform: translateX(0) translateY(0);
+      /* disable hover on mobile */
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    .hc.active > .hc-card {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
     }
     .hc-card::after { display: none; }
+
+    .hc-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 49;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .hc-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
   }
 
   /* ---- SCROLL REVEAL ---- */
@@ -1010,6 +1037,7 @@
     </div>
   </footer>
 
+<div class="hc-overlay" id="hcOverlay"></div>
 </div>
 
 <script>
@@ -1024,6 +1052,32 @@ function copyCmd(btn) {
     setTimeout(() => btn.textContent = 'copy', 1500);
   });
 }
+
+// Mobile hover cards: tap to open, tap overlay or card to close
+const overlay = document.getElementById('hcOverlay');
+const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
+
+function closeAllCards() {
+  document.querySelectorAll('.hc.active').forEach(el => el.classList.remove('active'));
+  overlay.classList.remove('active');
+}
+
+document.querySelectorAll('.hc-trigger').forEach(trigger => {
+  trigger.addEventListener('click', (e) => {
+    if (!isMobile()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const hc = trigger.closest('.hc');
+    const wasActive = hc.classList.contains('active');
+    closeAllCards();
+    if (!wasActive) {
+      hc.classList.add('active');
+      overlay.classList.add('active');
+    }
+  });
+});
+
+overlay.addEventListener('click', closeAllCards);
 </script>
 
 </body>
