@@ -99,6 +99,11 @@
     gap: 8px;
   }
 
+  nav .logo .logo-img {
+    height: 40px;
+    width: auto;
+  }
+
   nav .logo .dot {
     width: 8px; height: 8px;
     border-radius: 50%;
@@ -706,6 +711,7 @@
     .install-block code { font-size: 11px; white-space: normal; word-break: break-all; }
     .hero-meta { flex-wrap: wrap; gap: 12px; }
     nav { padding: 16px 20px; }
+    nav .logo .logo-img { height: 28px; }
     nav .nav-links { gap: 16px; }
     nav .nav-links li:nth-child(-n+2) { display: none; }
     .compare-row { grid-template-columns: 1fr; }
@@ -719,7 +725,7 @@
 <div class="wrapper">
 
   <nav role="navigation" aria-label="Main">
-    <a href="#" class="logo"><img src="logo-v2-abstract.svg" alt="KeyMute" height="32"></a>
+    <a href="#" class="logo"><img src="logo-v2-abstract.svg" alt="KeyMute" class="logo-img"></a>
     <ul class="nav-links">
       <li><a href="#features">Features</a></li>
       <li><a href="#how">How it works</a></li>
