@@ -376,12 +376,14 @@
     line-height: 1.9;
     color: var(--text-dim);
     overflow-x: auto;
+    white-space: pre;
   }
 
   .diagram-content .hl { color: var(--accent); }
   .diagram-content .dim { color: var(--text-muted); }
   .diagram-content .grn { color: var(--green); }
   .diagram-content .red { color: var(--red); }
+
 
   /* ---- NUMBERS ---- */
   .numbers {
@@ -587,6 +589,93 @@
     gap: 20px;
   }
 
+  /* ---- HOVER CARD ---- */
+  .hc {
+    position: relative;
+    display: inline;
+    cursor: help;
+  }
+
+  .hc > .hc-trigger {
+    font-family: var(--mono);
+    font-size: 0.82em;
+    color: var(--accent-dim);
+    background: var(--bg-subtle);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    border-bottom-style: dashed;
+    transition: border-color 0.2s, color 0.2s;
+    word-break: break-word;
+  }
+
+  .hc:hover > .hc-trigger {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+  }
+
+  .hc > .hc-card {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    width: 280px;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s var(--ease), transform 0.2s var(--ease);
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  .hc:hover > .hc-card {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+  }
+
+  .hc-card::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: var(--border);
+  }
+
+  .hc-card .hc-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    letter-spacing: 0.02em;
+  }
+
+  .hc-card .hc-body {
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  @media (max-width: 640px) {
+    .hc > .hc-card {
+      position: fixed;
+      bottom: 16px;
+      left: 16px;
+      right: 16px;
+      width: auto;
+      transform: translateX(0) translateY(6px);
+    }
+    .hc:hover > .hc-card {
+      transform: translateX(0) translateY(0);
+    }
+    .hc-card::after { display: none; }
+  }
+
   /* ---- SCROLL REVEAL ---- */
   .reveal {
     opacity: 0;
@@ -684,9 +773,9 @@
     <div class="section-label">Why it&rsquo;s different</div>
     <h2 class="section-heading">Built like a tool<br>you&rsquo;d <span class="em">write yourself</span></h2>
     <p class="prose">
-      Most menu bar apps ship a SwiftUI settings window, an <code>NSHostingView</code>, and an entire view-diffing engine &mdash; sitting in memory for a screen you open once a month. That&rsquo;s 50&ndash;150 MB of idle RAM for a mute button.
+      Most menu bar apps ship a full settings window and a <span class="hc"><span class="hc-trigger">SwiftUI engine</span><span class="hc-card"><span class="hc-title">SwiftUI + NSHostingView</span><span class="hc-body">Apple&rsquo;s modern UI framework. Great for building interfaces, but it loads an entire view-diffing engine, layout solver, and rendering pipeline into memory &mdash; even if you never open the settings screen.</span></span></span> &mdash; sitting in memory for a screen you open once a month. That&rsquo;s 50&ndash;150 MB of idle RAM for a mute button.
       <br><br>
-      <strong>KeyMute has zero windows.</strong> The entire UI is an <code>NSStatusItem</code>, an <code>NSMenu</code>, and a single <code>NSPanel</code> for the toast &mdash; allocated once, reused forever. No view hierarchies. No layout solver idling in the background.
+      <strong>KeyMute has zero windows.</strong> The entire UI is just a <span class="hc"><span class="hc-trigger">menu bar icon</span><span class="hc-card"><span class="hc-title">NSStatusItem + NSMenu</span><span class="hc-body">The lightest possible UI on macOS &mdash; a single icon in the menu bar with a dropdown menu. No windows, no view trees, no layout engine. Allocated once, reused forever.</span></span></span>, a dropdown menu, and a single <span class="hc"><span class="hc-trigger">toast notification</span><span class="hc-card"><span class="hc-title">NSPanel</span><span class="hc-body">A lightweight floating panel that briefly shows &ldquo;Muted&rdquo; or &ldquo;Unmuted&rdquo; at the bottom-right of your screen. Created once at launch, hidden when not needed.</span></span></span> &mdash; allocated once, reused forever.
     </p>
 
     <div class="numbers reveal reveal-delay-1">
@@ -718,12 +807,12 @@
       <div class="feature-card">
         <div class="feature-icon">&#9000;</div>
         <h3>Global shortcut</h3>
-        <p>Default &#8984;&#8679;0, fully customizable. Works from any app, any fullscreen state. Carbon hotkeys &mdash; no Accessibility permission.</p>
+        <p>Default &#8984;&#8679;0, fully customizable. Works from any app, any fullscreen state. No Accessibility permission needed.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#9724;</div>
         <h3>System-wide mute</h3>
-        <p>Writes to CoreAudio&rsquo;s device-level mute. Zoom, Meet, Teams, Chrome &mdash; they all see silence instantly. Not a per-app hack.</p>
+        <p>Mutes your mic at the operating system level. Zoom, Meet, Teams, Chrome &mdash; they all hear silence instantly. Not a per-app hack.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#9673;</div>
@@ -733,7 +822,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#9634;</div>
         <h3>Invisible toast HUD</h3>
-        <p>Shows &ldquo;Muted&rdquo; / &ldquo;Unmuted&rdquo; briefly. Uses sharingType=none &mdash; your audience never sees it during screen share.</p>
+        <p>Shows &ldquo;Muted&rdquo; / &ldquo;Unmuted&rdquo; briefly. Completely invisible to your audience during screen share &mdash; only you see it.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#8644;</div>
@@ -743,7 +832,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#8635;</div>
         <h3>Stays in sync</h3>
-        <p>Listens to CoreAudio property changes. Muting from System Settings or swapping your mic updates KeyMute in real time.</p>
+        <p>If you mute from System Settings or swap your mic, KeyMute picks it up instantly. Always shows the real state.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">&#9788;</div>
@@ -763,7 +852,7 @@
       <div class="feature-card">
         <div class="feature-icon">&#9889;</div>
         <h3>~700 KB. No Electron.</h3>
-        <p>Native Swift binary. One SPM dependency. Launches at login via SMAppService. Runs forever, costs nothing.</p>
+        <p>Native Swift. No Electron, no web views, no bundled runtimes. Launches at login. Runs forever, costs nothing.</p>
       </div>
     </div>
   </section>
@@ -771,7 +860,7 @@
   <!-- HOW IT WORKS -->
   <section id="how">
     <div class="section-label reveal">Under the hood</div>
-    <h2 class="section-heading reveal">CoreAudio does <span class="em">the real work</span></h2>
+    <h2 class="section-heading reveal">macOS does <span class="em">the real work</span></h2>
 
     <div class="diagram-wrap reveal reveal-delay-1">
       <div class="diagram-bar" aria-hidden="true">
@@ -780,28 +869,27 @@
         <div class="circle"></div>
         <span class="title">how-it-works.txt</span>
       </div>
-      <div class="diagram-content">
-<span class="dim">  You press</span> <span class="hl">&#8984;&#8679;0</span><br>
-<span class="dim">       &#9474;</span><br>
-<span class="dim">       &#9660;</span><br>
-<span class="dim">  KeyMute calls</span> <span class="hl">AudioObjectSetPropertyData</span><br>
-<span class="dim">  on the default input device</span><br>
-<span class="dim">       &#9474;</span><br>
-<span class="dim">       &#9660;</span><br>
-<span class="dim">  &#9484;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9488;</span><br>
-<span class="dim">  &#9474;</span>  <span class="hl">kAudioDevicePropertyMute</span> <span class="dim">=</span> <span class="red">1</span>       <span class="dim">&#9474;</span><br>
-<span class="dim">  &#9474;</span>  <span class="dim">scope:</span> <span class="grn">kAudioDevicePropertyScopeInput</span> <span class="dim">&#9474;</span><br>
-<span class="dim">  &#9492;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9496;</span><br>
-<span class="dim">       &#9474;</span><br>
-<span class="dim">       &#9500;&#9472;&#9472;&#9654;</span> <span class="grn">Zoom</span>    <span class="dim">&rarr; sees silence</span><br>
-<span class="dim">       &#9500;&#9472;&#9472;&#9654;</span> <span class="grn">Meet</span>    <span class="dim">&rarr; sees silence</span><br>
-<span class="dim">       &#9500;&#9472;&#9472;&#9654;</span> <span class="grn">Teams</span>   <span class="dim">&rarr; sees silence</span><br>
-<span class="dim">       &#9492;&#9472;&#9472;&#9654;</span> <span class="grn">Chrome</span>  <span class="dim">&rarr; sees silence</span><br>
-      </div>
+      <div class="diagram-content"><span class="dim">You press</span> <span class="hl">&#8984;&#8679;0</span>
+<span class="dim">  |</span>
+<span class="dim">  v</span>
+<span class="dim">KeyMute calls</span> <span class="hl">AudioObjectSetPropertyData</span>
+<span class="dim">on the default input device</span>
+<span class="dim">  |</span>
+<span class="dim">  v</span>
+<span class="dim">  +--------------------------+</span>
+<span class="dim">  |</span> <span class="hl">kAudioDevicePropertyMute</span> <span class="dim">|</span>
+<span class="dim">  |</span> <span class="dim">value:</span> <span class="red">muted</span>            <span class="dim">|</span>
+<span class="dim">  |</span> <span class="dim">scope:</span> <span class="grn">microphone input</span>  <span class="dim">|</span>
+<span class="dim">  +--------------------------+</span>
+<span class="dim">  |</span>
+<span class="dim">  |--&gt;</span> <span class="grn">Zoom</span>   <span class="dim">-&gt; sees silence</span>
+<span class="dim">  |--&gt;</span> <span class="grn">Meet</span>   <span class="dim">-&gt; sees silence</span>
+<span class="dim">  |--&gt;</span> <span class="grn">Teams</span>  <span class="dim">-&gt; sees silence</span>
+<span class="dim">  \--&gt;</span> <span class="grn">Chrome</span> <span class="dim">-&gt; sees silence</span></div>
     </div>
 
     <p class="prose reveal reveal-delay-2" style="margin-top: 24px;">
-      Setting <code>kAudioDevicePropertyMute</code> on the default input device is equivalent to flipping the mute switch in System Settings &rarr; Sound &rarr; Input. Because it&rsquo;s at the device level, every application reading from the mic immediately gets silence &mdash; including apps that show their own mute UI.
+      KeyMute flips the same mute switch that lives in <strong>System Settings &rarr; Sound &rarr; Input</strong> &mdash; just instantly, via a keyboard shortcut. Because the mute happens at the <span class="hc"><span class="hc-trigger">device level</span><span class="hc-card"><span class="hc-title">kAudioDevicePropertyMute</span><span class="hc-body">A CoreAudio property on the system&rsquo;s input device. When set to 1, macOS itself stops sending audio data to all apps reading from the mic. It&rsquo;s the same property the Sound settings panel controls.</span></span></span>, every application reading from the mic immediately gets silence &mdash; including apps that show their own mute UI.
     </p>
   </section>
 
@@ -821,8 +909,8 @@
         <div class="compare-cell">No windows. Ever.</div>
       </div>
       <div class="compare-row">
-        <div class="compare-cell">SwiftUI runtime + NSHostingView overhead</div>
-        <div class="compare-cell">Pure AppKit. No runtime.</div>
+        <div class="compare-cell">Full UI framework loaded in the background</div>
+        <div class="compare-cell">No UI framework. Zero overhead.</div>
       </div>
       <div class="compare-row">
         <div class="compare-cell">50&ndash;150 MB idle RAM</div>
@@ -854,12 +942,12 @@
       <div class="perm-row">
         <div class="perm-icon" aria-hidden="true">&#10003;</div>
         <span class="perm-name">Microphone</span>
-        <span class="perm-why">CoreAudio mute writes are TCC-gated</span>
+        <span class="perm-why">Required by macOS to control the mic mute</span>
       </div>
       <div class="perm-row">
         <div class="perm-icon" style="color:var(--text-muted)" aria-hidden="true">&#10005;</div>
         <span class="perm-name" style="color:var(--text-muted)">Accessibility</span>
-        <span class="perm-why">Carbon hotkeys don&rsquo;t need it</span>
+        <span class="perm-why">Keyboard shortcuts work without it</span>
       </div>
       <div class="perm-row">
         <div class="perm-icon" style="color:var(--text-muted)" aria-hidden="true">&#10005;</div>
@@ -869,7 +957,7 @@
       <div class="perm-row">
         <div class="perm-icon" style="color:var(--text-muted)" aria-hidden="true">&#10005;</div>
         <span class="perm-name" style="color:var(--text-muted)">Input Monitoring</span>
-        <span class="perm-why">Scoped hotkeys, not raw keystrokes</span>
+        <span class="perm-why">Only listens for your chosen shortcut, nothing else</span>
       </div>
     </div>
   </section>
