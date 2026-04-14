@@ -661,12 +661,19 @@
     line-height: 1.55;
   }
 
-  /* Mobile: show explanation inline */
+  /* Mobile: tap to expand inline */
   @media (max-width: 640px) {
-    .hc { display: inline; }
+    .hc > .hc-trigger::after {
+      content: ' \25BE';
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+    .hc.open > .hc-trigger::after {
+      content: ' \25B4';
+    }
     .hc > .hc-card {
       position: relative;
-      display: block;
+      display: none;
       bottom: auto;
       left: auto;
       width: 100%;
@@ -674,20 +681,22 @@
       transform: none;
       pointer-events: auto;
       box-shadow: none;
-      background: transparent;
-      border: none;
-      border-left: 2px solid var(--border);
-      border-radius: 0;
-      padding: 4px 0 4px 12px;
-      margin: 6px 0 2px;
+      background: var(--bg-raised);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 8px 0 4px;
     }
     .hc:hover > .hc-card {
-      opacity: 1;
-      transform: none;
+      display: none;
+      opacity: 0;
+    }
+    .hc.open > .hc-card {
+      display: block;
     }
     .hc-card::after { display: none; }
-    .hc-card .hc-title { display: none; }
-    .hc-card .hc-body { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .hc-card .hc-title { font-size: 11px; margin-bottom: 4px; }
+    .hc-card .hc-body { font-size: 12px; line-height: 1.5; }
   }
 
   /* ---- SCROLL REVEAL ---- */
@@ -1031,6 +1040,18 @@ const obs = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }});
 }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// Mobile hover cards: tap to toggle
+document.querySelectorAll('.hc-trigger').forEach(t => {
+  t.addEventListener('click', (e) => {
+    if (!window.matchMedia('(max-width: 640px)').matches) return;
+    e.preventDefault();
+    const hc = t.closest('.hc');
+    const wasOpen = hc.classList.contains('open');
+    document.querySelectorAll('.hc.open').forEach(el => el.classList.remove('open'));
+    if (!wasOpen) hc.classList.add('open');
+  });
+});
 
 function copyCmd(btn) {
   navigator.clipboard.writeText('curl -fsSL https://raw.githubusercontent.com/ankitaniket/KeyMute/main/install.sh | bash').then(() => {
