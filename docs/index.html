@@ -661,46 +661,33 @@
     line-height: 1.55;
   }
 
-  /* Mobile: tap-to-show bottom sheet */
+  /* Mobile: show explanation inline */
   @media (max-width: 640px) {
+    .hc { display: inline; }
     .hc > .hc-card {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      position: relative;
+      display: block;
+      bottom: auto;
+      left: auto;
       width: 100%;
-      border-radius: 14px 14px 0 0;
-      padding: 20px 24px 28px;
-      transform: translateY(100%);
-      opacity: 0;
-      transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
-      box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+      box-shadow: none;
+      background: transparent;
+      border: none;
+      border-left: 2px solid var(--border);
+      border-radius: 0;
+      padding: 4px 0 4px 12px;
+      margin: 6px 0 2px;
     }
     .hc:hover > .hc-card {
-      /* disable hover on mobile */
-      opacity: 0;
-      transform: translateY(100%);
-    }
-    .hc.active > .hc-card {
       opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
+      transform: none;
     }
     .hc-card::after { display: none; }
-
-    .hc-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.5);
-      z-index: 49;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s;
-    }
-    .hc-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .hc-card .hc-title { display: none; }
+    .hc-card .hc-body { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
   }
 
   /* ---- SCROLL REVEAL ---- */
@@ -1037,7 +1024,6 @@
     </div>
   </footer>
 
-<div class="hc-overlay" id="hcOverlay"></div>
 </div>
 
 <script>
@@ -1053,31 +1039,6 @@ function copyCmd(btn) {
   });
 }
 
-// Mobile hover cards: tap to open, tap overlay or card to close
-const overlay = document.getElementById('hcOverlay');
-const isMobile = () => window.matchMedia('(max-width: 640px)').matches;
-
-function closeAllCards() {
-  document.querySelectorAll('.hc.active').forEach(el => el.classList.remove('active'));
-  overlay.classList.remove('active');
-}
-
-document.querySelectorAll('.hc-trigger').forEach(trigger => {
-  trigger.addEventListener('click', (e) => {
-    if (!isMobile()) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const hc = trigger.closest('.hc');
-    const wasActive = hc.classList.contains('active');
-    closeAllCards();
-    if (!wasActive) {
-      hc.classList.add('active');
-      overlay.classList.add('active');
-    }
-  });
-});
-
-overlay.addEventListener('click', closeAllCards);
 </script>
 
 </body>
