@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <!-- Abstract mark: keyboard key shape with mic wave cancel -->
+  <defs>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c9a87c"/>
+      <stop offset="100%" stop-color="#a08460"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded key shape -->
+  <g transform="translate(8, 8)">
+    <rect x="4" y="4" width="52" height="52" rx="12" fill="none" stroke="#c9a87c" stroke-width="2"/>
+
+    <!-- Simplified mic silhouette inside the key -->
+    <rect x="22" y="14" width="12" height="20" rx="6" fill="url(#g2)" opacity="0.9"/>
+    <!-- Arc -->
+    <path d="M18 30 C18 40, 38 40, 38 30" stroke="#c9a87c" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.6"/>
+    <!-- Stand -->
+    <line x1="28" y1="40" x2="28" y2="46" stroke="#c9a87c" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+
+    <!-- Diagonal slash -->
+    <line x1="14" y1="14" x2="44" y2="46" stroke="#c25d4e" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="76" y="50" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif" font-size="30" font-weight="600" letter-spacing="-0.8" fill="#e8e4df">Key<tspan fill="#c9a87c" font-family="Georgia, 'Newsreader', serif" font-style="italic" font-weight="400">Mute</tspan></text>
+</svg>
