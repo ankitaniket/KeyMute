@@ -12,12 +12,12 @@ dim()   { printf '\033[2m%s\033[0m\n' "$*"; }
 
 # ── Pre-flight checks ─────────────────────────────────────────────────────────
 if [[ "$(uname -s)" != "Darwin" ]]; then
-  red "✗ Mutify only runs on macOS."
+  red "✗ KeyMute only runs on macOS."
   exit 1
 fi
 MACOS_MAJOR=$(sw_vers -productVersion | cut -d. -f1)
 if (( MACOS_MAJOR < 13 )); then
-  red "✗ Mutify requires macOS 13 (Ventura) or later. You have $(sw_vers -productVersion)."
+  red "✗ KeyMute requires macOS 13 (Ventura) or later. You have $(sw_vers -productVersion)."
   exit 1
 fi
 for cmd in curl hdiutil xattr osascript pgrep; do
@@ -54,7 +54,7 @@ elif [[ -n "${GITHUB_TOKEN:-}" ]]; then
   AUTH_HEADER=(-H "Authorization: token ${GITHUB_TOKEN}")
 fi
 
-bold "→ Checking for the latest Mutify release…"
+bold "→ Checking for the latest KeyMute release…"
 API_URL="https://api.github.com/repos/${REPO}/releases/latest"
 RELEASE_JSON=$(curl -fsSL ${AUTH_HEADER[@]+"${AUTH_HEADER[@]}"} "$API_URL" 2>/dev/null) || {
   red "✗ Could not reach the GitHub API at $API_URL"
@@ -65,7 +65,7 @@ LATEST_VER=$(printf '%s' "$RELEASE_JSON" | grep -o '"tag_name":[[:space:]]*"[^"]
 
 # ── Already up to date? ───────────────────────────────────────────────────────
 if [[ "$IS_UPDATE" == true && -n "$INSTALLED_VER" && -n "$LATEST_VER" && "$INSTALLED_VER" == "$LATEST_VER" ]]; then
-  green "✓ Mutify ${INSTALLED_VER} is already installed and up to date."
+  green "✓ KeyMute ${INSTALLED_VER} is already installed and up to date."
   echo
   echo "  To reinstall anyway, remove the app first:"
   echo "    rm -rf \"$DEST\" && curl -fsSL https://raw.githubusercontent.com/${REPO}/main/install.sh | bash"
@@ -117,7 +117,7 @@ fi
 
 # ── Install / Update ──────────────────────────────────────────────────────────
 if [[ "$IS_UPDATE" == true ]]; then
-  bold "→ Updating Mutify ${INSTALLED_VER} → ${LATEST_VER}…"
+  bold "→ Updating KeyMute ${INSTALLED_VER} → ${LATEST_VER}…"
 else
   bold "→ Installing to ${DEST}…"
 fi
@@ -142,7 +142,7 @@ else
 fi
 
 # ── Launch ─────────────────────────────────────────────────────────────────────
-bold "→ Launching Mutify…"
+bold "→ Launching KeyMute…"
 open "$DEST"
 
 # ── Post-install setup diagnostics ─────────────────────────────────────────────
@@ -167,9 +167,9 @@ fi
 
 echo
 if [[ "$IS_UPDATE" == true ]]; then
-  green "✓ Mutify updated to ${LATEST_VER}."
+  green "✓ KeyMute updated to ${LATEST_VER}."
 else
-  green "✓ Mutify installed successfully."
+  green "✓ KeyMute installed successfully."
 fi
 echo
 echo "  • Look for the mic icon in your menu bar (top-right)."

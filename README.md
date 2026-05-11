@@ -89,7 +89,7 @@ Downloads the latest DMG, installs to `/Applications`, strips quarantine, launch
 
 ### Manual
 
-1. Download **Mutify-x.y.z.dmg** from [Releases](https://github.com/ankitaniket/KeyMute/releases)
+1. Download **KeyMute-x.y.z.dmg** from [Releases](https://github.com/ankitaniket/KeyMute/releases)
 2. Drag to Applications
 3. Right-click > Open (first time only, for Gatekeeper)
 4. Allow Microphone permission when prompted
