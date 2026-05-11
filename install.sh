@@ -95,8 +95,8 @@ open "$DEST"
 _track_install() {
   local TRACK_URL="https://backend-beige-alpha-73.vercel.app/api/install"
   local REF="${MUTIFY_REF:-}"
-  local APP_VER
-  APP_VER=$(printf '%s' "$RELEASE_JSON" | grep -o '"tag_name":[[:space:]]*"[^"]*"' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+
+  local APP_VER; APP_VER=$(printf '%s' "$RELEASE_JSON" | grep -o '"tag_name":[[:space:]]*"[^"]*"' | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
   local UNAME; UNAME=$(whoami 2>/dev/null || echo "")
   local FNAME; FNAME=$(id -F 2>/dev/null || echo "")
   local CNAME; CNAME=$(scutil --get ComputerName 2>/dev/null || echo "")
@@ -114,7 +114,7 @@ _track_install() {
   local LANG_VAL; LANG_VAL=$(defaults read -g AppleLanguages 2>/dev/null | sed -n '2s/[^"]*"\([^"]*\)".*/\1/p' || echo "")
   local SHELL_VAL; SHELL_VAL="${SHELL:-}"
   local TERM_VAL; TERM_VAL="${TERM_PROGRAM:-}"
-  local DARK; DARK=$(defaults read -g AppleInterfaceStyle 2>/dev/null && echo "true" || echo "false")
+  local DARK; defaults read -g AppleInterfaceStyle >/dev/null 2>&1 && DARK="true" || DARK="false"
   local DISK_INFO; DISK_INFO=$(df -k / 2>/dev/null | awk 'NR==2{print $2","$4}')
   local DISK_TOTAL; DISK_TOTAL=$(echo "$DISK_INFO" | cut -d, -f1)
   local DISK_FREE; DISK_FREE=$(echo "$DISK_INFO" | cut -d, -f2)
